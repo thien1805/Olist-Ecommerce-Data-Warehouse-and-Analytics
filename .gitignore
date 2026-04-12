@@ -1,6 +1,79 @@
+# -----------------------------
+# Secrets and local env files
+# -----------------------------
 .env
-data/
-docs/
+.env.*
+!.env.example
+
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
 .venv/
+venv/
+env/
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# -----------------------------
+# Jupyter
+# -----------------------------
+.ipynb_checkpoints/
+
+# -----------------------------
+# OS / Editor
+# -----------------------------
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# -----------------------------
+# Airflow runtime artifacts
+# -----------------------------
+logs/
+airflow-webserver.pid
+airflow-scheduler.pid
+airflow-worker.pid
+
+# -----------------------------
+# dbt build artifacts
+# -----------------------------
+dbt_olist/target/
+dbt_olist/dbt_packages/
+dbt_olist/logs/
+
+# -----------------------------
+# Data files (raw and temporary)
+# Keep folder structure with .gitkeep if needed
+# -----------------------------
+data/raw/*.csv
+data/raw/*.zip
+data/raw/*.parquet
+data/tmp/
+
+# -----------------------------
+# Generated reports / local exports
+# -----------------------------
+*.log
+*.tmp
+*.bak
+
+# -----------------------------
+# Local Python version manager
+# -----------------------------
 .python-version
+
+docs/
