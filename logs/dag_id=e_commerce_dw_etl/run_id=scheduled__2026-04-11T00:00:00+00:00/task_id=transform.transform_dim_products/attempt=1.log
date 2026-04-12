@@ -1,0 +1,101 @@
+[2026-04-12T00:19:22.670+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-12T00:19:22.697+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: e_commerce_dw_etl.transform.transform_dim_products scheduled__2026-04-11T00:00:00+00:00 [queued]>
+[2026-04-12T00:19:22.701+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: e_commerce_dw_etl.transform.transform_dim_products scheduled__2026-04-11T00:00:00+00:00 [queued]>
+[2026-04-12T00:19:22.701+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 3
+[2026-04-12T00:19:22.708+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): transform.transform_dim_products> on 2026-04-11 00:00:00+00:00
+[2026-04-12T00:19:22.712+0000] {standard_task_runner.py:63} INFO - Started process 15872 to run task
+[2026-04-12T00:19:22.715+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'e_commerce_dw_etl', 'transform.transform_dim_products', 'scheduled__2026-04-11T00:00:00+00:00', '--job-id', '743', '--raw', '--subdir', 'DAGS_FOLDER/e_commerce_dw_dag.py', '--cfg-path', '/tmp/tmp3wvee02r']
+[2026-04-12T00:19:22.717+0000] {standard_task_runner.py:91} INFO - Job 743: Subtask transform.transform_dim_products
+[2026-04-12T00:19:22.758+0000] {task_command.py:426} INFO - Running <TaskInstance: e_commerce_dw_etl.transform.transform_dim_products scheduled__2026-04-11T00:00:00+00:00 [running]> on host 91966b1ada42
+[2026-04-12T00:19:22.828+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='e_commerce_dw_etl' AIRFLOW_CTX_TASK_ID='transform.transform_dim_products' AIRFLOW_CTX_EXECUTION_DATE='2026-04-11T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-04-11T00:00:00+00:00'
+[2026-04-12T00:19:22.829+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-12T00:19:22.841+0000] {base.py:84} INFO - Using connection ID 'postgres' for task execution.
+[2026-04-12T00:19:22.851+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.10/site-packages/***/providers/common/sql/hooks/sql.py:263 UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+[2026-04-12T00:19:22.972+0000] {base.py:84} INFO - Using connection ID 'postgres' for task execution.
+[2026-04-12T00:19:22.983+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.10/site-packages/***/providers/common/sql/hooks/sql.py:263 UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+[2026-04-12T00:19:23.027+0000] {base.py:84} INFO - Using connection ID 'postgres' for task execution.
+[2026-04-12T00:19:23.078+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-12T00:19:23.080+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.DependentObjectsStillExist: cannot drop table warehouse.dim_products because other objects depend on it
+DETAIL:  view analytics.vw_category_performance depends on table warehouse.dim_products
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/baseoperator.py", line 401, in wrapper
+    return func(self, *args, **kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/transform_dim_products.py", line 29, in transform_dim_products
+    warehouse_operator.save_data_to_postgres(
+  File "/opt/airflow/plugins/postgresql_operator.py", line 19, in save_data_to_postgres
+    df.to_sql(table_name, engine, schema=schema, if_exists=if_exists, index=False)
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/core/generic.py", line 2987, in to_sql
+    return sql.to_sql(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 695, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 1728, in to_sql
+    table = self.prep_table(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 1631, in prep_table
+    table.create()
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 831, in create
+    self.pd_sql.drop_table(self.name, self.schema)
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 1782, in drop_table
+    self.get_table(table_name, schema).drop(bind=self.connectable)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/schema.py", line 979, in drop
+    bind._run_ddl_visitor(ddl.SchemaDropper, self, checkfirst=checkfirst)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 3238, in _run_ddl_visitor
+    conn._run_ddl_visitor(visitorcallable, element, **kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2221, in _run_ddl_visitor
+    visitorcallable(self.dialect, self, **kwargs).traverse_single(element)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/visitors.py", line 524, in traverse_single
+    return meth(obj, **kw)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/ddl.py", line 1106, in visit_table
+    self.connection.execute(DropTable(table))
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1385, in execute
+    return meth(self, multiparams, params, _EMPTY_EXECUTION_OPTS)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/ddl.py", line 80, in _execute_on_connection
+    return connection._execute_ddl(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1477, in _execute_ddl
+    ret = self._execute_context(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1953, in _execute_context
+    self._handle_dbapi_exception(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.InternalError: (psycopg2.errors.DependentObjectsStillExist) cannot drop table warehouse.dim_products because other objects depend on it
+DETAIL:  view analytics.vw_category_performance depends on table warehouse.dim_products
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+
+[SQL: 
+DROP TABLE warehouse.dim_products]
+(Background on this error at: https://sqlalche.me/e/14/2j85)
+[2026-04-12T00:19:23.117+0000] {taskinstance.py:1206} INFO - Marking task as UP_FOR_RETRY. dag_id=e_commerce_dw_etl, task_id=transform.transform_dim_products, run_id=scheduled__2026-04-11T00:00:00+00:00, execution_date=20260411T000000, start_date=20260412T001922, end_date=20260412T001923
+[2026-04-12T00:19:23.139+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 743 for task transform.transform_dim_products ((psycopg2.errors.DependentObjectsStillExist) cannot drop table warehouse.dim_products because other objects depend on it
+DETAIL:  view analytics.vw_category_performance depends on table warehouse.dim_products
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+
+[SQL: 
+DROP TABLE warehouse.dim_products]
+(Background on this error at: https://sqlalche.me/e/14/2j85); 15872)
+[2026-04-12T00:19:23.181+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-04-12T00:19:23.210+0000] {taskinstance.py:3503} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-04-12T00:19:23.213+0000] {local_task_job_runner.py:222} INFO - ::endgroup::

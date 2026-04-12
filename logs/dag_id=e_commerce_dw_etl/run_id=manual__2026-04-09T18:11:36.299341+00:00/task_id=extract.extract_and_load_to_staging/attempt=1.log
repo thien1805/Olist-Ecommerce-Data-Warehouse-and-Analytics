@@ -1,0 +1,111 @@
+[2026-04-09T18:11:37.913+0000] {local_task_job_runner.py:120} INFO - ::group::Pre task execution logs
+[2026-04-09T18:11:37.967+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: e_commerce_dw_etl.extract.extract_and_load_to_staging manual__2026-04-09T18:11:36.299341+00:00 [queued]>
+[2026-04-09T18:11:37.978+0000] {taskinstance.py:2076} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: e_commerce_dw_etl.extract.extract_and_load_to_staging manual__2026-04-09T18:11:36.299341+00:00 [queued]>
+[2026-04-09T18:11:37.979+0000] {taskinstance.py:2306} INFO - Starting attempt 1 of 1
+[2026-04-09T18:11:37.996+0000] {taskinstance.py:2330} INFO - Executing <Task(PythonOperator): extract.extract_and_load_to_staging> on 2026-04-09 18:11:36.299341+00:00
+[2026-04-09T18:11:38.011+0000] {standard_task_runner.py:63} INFO - Started process 3601 to run task
+[2026-04-09T18:11:38.018+0000] {standard_task_runner.py:90} INFO - Running: ['***', 'tasks', 'run', 'e_commerce_dw_etl', 'extract.extract_and_load_to_staging', 'manual__2026-04-09T18:11:36.299341+00:00', '--job-id', '687', '--raw', '--subdir', 'DAGS_FOLDER/e_commerce_dw_dag.py', '--cfg-path', '/tmp/tmp_5zxv9nv']
+[2026-04-09T18:11:38.020+0000] {standard_task_runner.py:91} INFO - Job 687: Subtask extract.extract_and_load_to_staging
+[2026-04-09T18:11:38.127+0000] {task_command.py:426} INFO - Running <TaskInstance: e_commerce_dw_etl.extract.extract_and_load_to_staging manual__2026-04-09T18:11:36.299341+00:00 [running]> on host 91966b1ada42
+[2026-04-09T18:11:38.317+0000] {taskinstance.py:2648} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='e_commerce_dw_etl' AIRFLOW_CTX_TASK_ID='extract.extract_and_load_to_staging' AIRFLOW_CTX_EXECUTION_DATE='2026-04-09T18:11:36.299341+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-04-09T18:11:36.299341+00:00'
+[2026-04-09T18:11:38.319+0000] {taskinstance.py:430} INFO - ::endgroup::
+[2026-04-09T18:11:38.415+0000] {base.py:84} INFO - Using connection ID 'mysql' for task execution.
+[2026-04-09T18:11:38.526+0000] {mysql_operator.py:28} INFO - Successfully connected to mysql database
+[2026-04-09T18:11:38.537+0000] {base.py:84} INFO - Using connection ID 'mysql' for task execution.
+[2026-04-09T18:11:38.559+0000] {logging_mixin.py:188} WARNING - /home/***/.local/lib/python3.10/site-packages/***/providers/common/sql/hooks/sql.py:263 UserWarning: pandas only supports SQLAlchemy connectable (engine/connection) or database string URI or sqlite3 DBAPI2 connection. Other DBAPI2 objects are not tested. Please consider using SQLAlchemy.
+[2026-04-09T18:11:38.649+0000] {base.py:84} INFO - Using connection ID 'postgres' for task execution.
+[2026-04-09T18:11:38.730+0000] {taskinstance.py:441} INFO - ::group::Post task execution logs
+[2026-04-09T18:11:38.731+0000] {taskinstance.py:2905} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.InvalidSchemaName: schema "staging" does not exist
+LINE 2: CREATE TABLE staging.stg_product_category_name_translation (
+                     ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 465, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 432, in _execute_callable
+    return execute_callable(context=context, **execute_callable_kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/baseoperator.py", line 401, in wrapper
+    return func(self, *args, **kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 235, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 252, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/extract_data.py", line 28, in extract_and_load_to_staging
+    staging_operator.save_data_to_postgres(
+  File "/opt/airflow/plugins/postgresql_operator.py", line 19, in save_data_to_postgres
+    df.to_sql(table_name, engine, schema=schema, if_exists=if_exists, index=False)
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/core/generic.py", line 2987, in to_sql
+    return sql.to_sql(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 695, in to_sql
+    return pandas_sql.to_sql(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 1728, in to_sql
+    table = self.prep_table(
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 1631, in prep_table
+    table.create()
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 838, in create
+    self._execute_create()
+  File "/home/airflow/.local/lib/python3.10/site-packages/pandas/io/sql.py", line 824, in _execute_create
+    self.table.create(bind=self.pd_sql.connectable)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/schema.py", line 962, in create
+    bind._run_ddl_visitor(ddl.SchemaGenerator, self, checkfirst=checkfirst)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 3238, in _run_ddl_visitor
+    conn._run_ddl_visitor(visitorcallable, element, **kwargs)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2221, in _run_ddl_visitor
+    visitorcallable(self.dialect, self, **kwargs).traverse_single(element)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/visitors.py", line 524, in traverse_single
+    return meth(obj, **kw)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/ddl.py", line 899, in visit_table
+    self.connection.execute(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1385, in execute
+    return meth(self, multiparams, params, _EMPTY_EXECUTION_OPTS)
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/sql/ddl.py", line 80, in _execute_on_connection
+    return connection._execute_ddl(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1477, in _execute_ddl
+    ret = self._execute_context(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1953, in _execute_context
+    self._handle_dbapi_exception(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/home/airflow/.local/lib/python3.10/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.InvalidSchemaName) schema "staging" does not exist
+LINE 2: CREATE TABLE staging.stg_product_category_name_translation (
+                     ^
+
+[SQL: 
+CREATE TABLE staging.stg_product_category_name_translation (
+	product_category_name TEXT, 
+	product_category_name_english TEXT
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/14/f405)
+[2026-04-09T18:11:38.774+0000] {taskinstance.py:1206} INFO - Marking task as FAILED. dag_id=e_commerce_dw_etl, task_id=extract.extract_and_load_to_staging, run_id=manual__2026-04-09T18:11:36.299341+00:00, execution_date=20260409T181136, start_date=20260409T181137, end_date=20260409T181138
+[2026-04-09T18:11:38.796+0000] {standard_task_runner.py:110} ERROR - Failed to execute job 687 for task extract.extract_and_load_to_staging ((psycopg2.errors.InvalidSchemaName) schema "staging" does not exist
+LINE 2: CREATE TABLE staging.stg_product_category_name_translation (
+                     ^
+
+[SQL: 
+CREATE TABLE staging.stg_product_category_name_translation (
+	product_category_name TEXT, 
+	product_category_name_english TEXT
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/14/f405); 3601)
+[2026-04-09T18:11:38.859+0000] {local_task_job_runner.py:240} INFO - Task exited with return code 1
+[2026-04-09T18:11:38.941+0000] {taskinstance.py:3503} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2026-04-09T18:11:38.956+0000] {local_task_job_runner.py:222} INFO - ::endgroup::
