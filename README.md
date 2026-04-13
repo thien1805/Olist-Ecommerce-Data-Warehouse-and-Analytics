@@ -101,19 +101,13 @@ BI access:
 
 ## 8) Dashboard Preview
 
-Add your screenshots here after exporting images.
-
-Suggested file locations:
-- `docs/images/sales_overview.png`
-- `docs/images/products_overview.png`
-
 ### Sales Overview
 
-![Sales Overview](docs/images/sales_overview.png)
+![Sales Overview](dashboard/sales_overview.jpg)
 
 ### Products Overview
 
-![Products Overview](docs/images/products_overview.png)
+![Products Overview](dashboard/product_overview.jpg)
 
 ## 9) Current Status
 
