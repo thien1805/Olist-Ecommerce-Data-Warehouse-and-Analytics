@@ -141,7 +141,7 @@ services:
       - data_network
 
 
-# --- NHÓM 3: KHỞI TẠO HỆ THỐNG ---
+# --- NHÓM 3: KHỞI TẠO HỆ THỐNG AIRFLOW ---
 
   airflow-webserver:
     <<: *airflow-common
@@ -251,6 +251,25 @@ services:
       - -c
       - airflow
 
+#Nhóm 4: dbt - transformation tool
+  dbt: 
+    build:
+      context: .
+      dockerfile: ./docker/dbt/Dockerfile
+    container_name: dbt
+    working_dir: /usr/app/dbt
+    volumes:
+      - ./dbt_olist:/usr/app/dbt
+      - ./dbt_olist/profiles:/root/.dbt
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["tail -f /dev/null"]
+    depends_on:
+      de_psql:
+        condition: service_started
+    networks:
+      - data_network
+
+#Nhóm 5: BI Service - Metabase
   metabase:
     image: metabase/metabase:latest
     container_name: metabase
@@ -272,7 +291,7 @@ networks:
     driver: bridge 
     name: data_network
 volumes:
-  mysql_h: {}
+  mysql_h: {} 
   postgres-db-volume:
   postgres_data_h: {}
   metabase_data: {}

@@ -1,0 +1,12 @@
+dbt_olist:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: de_psql
+      user: admin
+      password: admin
+      port: 5432
+      dbname: postgres
+      schema: analytics
+      threads: 4

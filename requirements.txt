@@ -6,3 +6,5 @@ Unidecode
 openpyxl
 apache-airflow-providers-celery>=3.3.0
 apache-airflow-providers-postgres
+dbt-core
+dbt-postgres
