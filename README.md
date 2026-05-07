@@ -1,105 +1,154 @@
 # Olist Analytics Platform
 
-End-to-end Data Engineering + BI project for Olist e-commerce data.
+End-to-end Data Engineering + BI project for Olist e-commerce data (Brazil, ~100K orders).
 
-Current implementation focuses on an automated ETL pipeline using Apache Airflow (Dockerized), extracting raw data from MySQL, transforming with Python/Pandas, and loading into PostgreSQL Data Warehouse for dashboarding.
+Built with an **ELT architecture**: Apache Airflow extracts raw data from MySQL into PostgreSQL, then **dbt** transforms it into a Star Schema data warehouse using a 3-layer model (staging → intermediate → marts).
 
-## 1) Project Overview
+## Architecture
 
-Main goals:
-- Build a reproducible ETL pipeline for e-commerce analytics.
-- Organize data into a warehouse schema for reporting.
-- Deliver BI dashboards for business monitoring (Sales and Product performance).
+```
+MySQL (Source)                PostgreSQL                      Metabase
+  9 raw tables    ──────>    schema: staging    ──────>      Dashboard
+                  Airflow         │              dbt
+                  Extract         ▼              Transform
+                             schema: staging_dbt
+                             (views — clean data)
+                                  │
+                                  ▼
+                             schema: warehouse
+                             (tables — dim & fact)
+```
 
-Current pipeline scope:
-- Source: MySQL (raw Olist tables).
-- Orchestration: Apache Airflow.
-- Transformation: Python + Pandas tasks in Airflow DAG.
-- Target: PostgreSQL (`warehouse` schema).
-- BI layer: Power BI / Metabase.
+### Airflow DAG: `e_commerce_elt`
 
-## 2) Architecture (Current State)
+```
+drop_dbt_staging_views → extract_and_load_to_staging → dbt_deps → dbt_run → dbt_test
+```
 
-Data flow:
-1. Raw CSV files are loaded into MySQL.
-2. Airflow DAG extracts raw tables from MySQL into PostgreSQL staging tables.
-3. Airflow transformation tasks build dimension and fact tables in `warehouse` schema.
-4. BI tools connect to PostgreSQL and visualize KPIs/insights.
+## Tech Stack
 
-Core DAG:
-- DAG ID: `e_commerce_dw_etl`
-- Flow: `extract` -> `transform` -> `load`
+| Component | Technology | Role |
+|---|---|---|
+| Source DB | MySQL 8.0 | Operational data (Olist dataset) |
+| Data Warehouse | PostgreSQL 14 | Staging + warehouse schemas |
+| Orchestrator | Apache Airflow 2.9.2 | Schedule & trigger pipeline |
+| Transform | dbt-core 1.8.7 | SQL-based transform on PostgreSQL |
+| BI Dashboard | Metabase | Data visualization |
+| Infrastructure | Docker Compose | 7 containerized services |
 
-## 3) Tech Stack
+## Data Warehouse — Star Schema
 
-- Apache Airflow (LocalExecutor)
-- Docker Compose
-- MySQL 8.0 (source)
-- PostgreSQL 14 (data warehouse)
-- Python (Pandas, Airflow providers)
-- Power BI / Metabase (analytics & visualization)
+```
+                    ┌──────────────┐
+                    │  dim_date    │
+                    └──────┬───────┘
+┌──────────────┐           │           ┌──────────────┐
+│dim_customers │───┐       │       ┌───│ dim_sellers   │
+└──────────────┘   │       │       │   └──────────────┘
+                   ▼       ▼       ▼
+┌──────────────┐  ┌────────────────┐  ┌──────────────┐
+│dim_geolocation│→│  fact_orders   │←│ dim_products  │
+└──────────────┘  └────────────────┘  └──────────────┘
+                         ▲
+                   ┌─────┘
+                   │
+              ┌────────────┐
+              │dim_payments│
+              └────────────┘
+```
 
-## 4) Repository Structure
+### dbt 3-Layer Model
 
-Key folders:
-- `dags/`: ETL tasks and DAG definition.
-- `plugins/`: custom database operators.
-- `data/raw/`: input CSV files.
-- `load_dataset_into_mysql/`: SQL scripts to create and load MySQL source tables.
-- `docs/`: project documentation and BI guides.
-- `logs/`: Airflow logs.
+| Layer | Schema | Materialization | Models | Purpose |
+|---|---|---|---|---|
+| **Staging** | `staging_dbt` | VIEW | 8 | Clean, cast types, normalize strings |
+| **Intermediate** | *(CTE only)* | EPHEMERAL | 2 | Join tables, compute delivery metrics |
+| **Marts** | `warehouse` | TABLE | 7 | Final dim & fact with surrogate keys |
 
-## 5) Data Warehouse Model (Current)
+## Repository Structure
 
-Schema:
-- `staging`: raw-to-staging tables (`stg_*`).
-- `warehouse`: analytics-ready star-like model.
+```
+├── dags/
+│   ├── extract_data.py                   # Extract: MySQL → PostgreSQL staging
+│   └── transform/
+│       └── e_commerce_dw_dag.py          # DAG: drop → extract → deps → run → test
+│
+├── dbt_olist/                            # dbt project
+│   ├── dbt_project.yml                   # 3-layer materialization config
+│   ├── packages.yml                      # dbt_utils
+│   ├── profiles/profiles.yml             # PostgreSQL connection
+│   ├── macros/
+│   │   ├── generate_schema_name.sql      # Override schema naming
+│   │   └── drop_staging_views.sql        # Pre-extract cleanup
+│   └── models/
+│       ├── staging/                      # 8 views (clean raw data)
+│       ├── intermediate/                 # 2 ephemeral models (join & enrich)
+│       └── marts/                        # 7 tables (dim & fact)
+│
+├── plugins/                              # Custom Airflow operators
+├── data/raw/                             # Source CSV files
+├── docs/                                 # Project documentation
+├── docker-compose.yaml
+├── Dockerfile
+└── requirements.txt
+```
 
-Main tables in `warehouse`:
-- Dimensions: `dim_customers`, `dim_products`, `dim_sellers`, `dim_geolocation`, `dim_dates`, `dim_payments`
-- Fact: `fact_orders`
+## Quick Start
 
-## 6) KPI Examples
+### Prerequisites
+- Docker & Docker Compose
+- Free ports: 3000, 3307, 5433, 8080
 
-Typical KPIs currently tracked:
-- GMV (Gross Merchandise Value)
-- Total Orders
-- AOV (Average Order Value)
-- Cancel Rate
-- Delivery Performance (on-time vs late)
-- Top category/city/state by revenue
-
-## 7) Run Project Locally
-
-Prerequisites:
-- Docker + Docker Compose
-- Make (optional, for helper commands)
-
-Start services:
+### 1. Start all services
 
 ```bash
+docker compose build
 docker compose up -d
 ```
 
-Load source schema and data into MySQL:
+### 2. Load CSV data into MySQL (first time only)
 
 ```bash
 make mysql_create
 make mysql_load
 ```
 
-Open Airflow:
-- URL: http://localhost:8080
-- Default account (from compose): airflow / airflow
+### 3. Configure Airflow connections (first time only)
 
-Trigger ETL DAG:
-- Enable and run DAG `e_commerce_dw_etl` in Airflow UI.
+Open http://localhost:8080 (login: `airflow` / `airflow`)
 
-BI access:
-- Metabase: http://localhost:3000
-- PostgreSQL warehouse host from local machine: `localhost:5433`
+Create connections in **Admin → Connections**:
 
-## 8) Dashboard Preview
+| Conn ID | Type | Host | Schema | Login | Password | Port |
+|---|---|---|---|---|---|---|
+| `mysql` | MySQL | mysql | olist | admin | admin | 3306 |
+| `postgres` | Postgres | de_psql | postgres | admin | admin | 5432 |
+
+### 4. Run the pipeline
+
+**Via Airflow UI:**
+- Find DAG `e_commerce_elt` → Unpause → Trigger
+
+**Via CLI:**
+```bash
+docker exec olist_analytics_platform-airflow-webserver-1 \
+  airflow dags trigger e_commerce_elt
+```
+
+### 5. View dashboard
+
+- **Metabase**: http://localhost:3000
+- **PostgreSQL**: `localhost:5433` (schema: `warehouse`)
+
+## KPIs Tracked
+
+- GMV (Gross Merchandise Value)
+- Total Orders & AOV (Average Order Value)
+- Cancel Rate
+- Delivery Performance (on-time vs late)
+- Top categories / cities / states by revenue
+
+## Dashboard Preview
 
 ### Sales Overview
 
@@ -109,8 +158,9 @@ BI access:
 
 ![Products Overview](dashboard/product_overview.jpg)
 
-## 9) Current Status
+## Documentation
 
-- ETL pipeline is operational with Airflow scheduling.
-- Data warehouse tables are generated in PostgreSQL.
-- Basic BI dashboards are built and ready for further analytics enhancement.
+| Document | Description |
+|---|---|
+| [Project Overview](docs/project_overview.md) | Architecture, schemas, DAG details |
+| [Migration Guide (ETL → ELT)](docs/migration_etl_to_elt_dbt.md) | Step-by-step migration, troubleshooting, advanced roadmap |
