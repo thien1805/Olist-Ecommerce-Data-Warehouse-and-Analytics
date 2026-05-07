@@ -91,3 +91,43 @@ Internal Error
 [0m00:14:41.947486 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x15b61d5b0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x15b68a690>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x15b4f3130>]}
 [0m00:14:41.947643 [debug] [MainThread]: Flushing usage events
 [0m00:14:43.101083 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:54:34.588768 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ddec550>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10de66ad0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10de67290>]}
+
+
+============================== 19:54:34.593325 | cb0a65b1-e07b-4e19-b994-dc0ff15ea609 ==============================
+[0m19:54:34.593325 [info ] [MainThread]: Running with dbt=1.11.8
+[0m19:54:34.593703 [debug] [MainThread]: running dbt with arguments {'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'empty': 'None', 'static_parser': 'True', 'debug': 'False', 'log_cache_events': 'False', 'fail_fast': 'False', 'use_colors': 'True', 'introspect': 'True', 'partial_parse': 'True', 'version_check': 'True', 'write_json': 'True', 'target_path': 'None', 'log_path': 'logs', 'profiles_dir': '/Users/thienngocpham/.dbt', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'no_print': 'None', 'use_experimental_parser': 'False', 'cache_selected_only': 'False', 'invocation_command': 'dbt deps', 'log_format': 'default', 'printer_width': '80', 'indirect_selection': 'eager', 'warn_error': 'None'}
+[0m19:54:34.594447 [error] [MainThread]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path /Users/thienngocpham/Documents/SEM6/DE_Project/Olist_Analytics_Platform/dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m19:54:34.603322 [debug] [MainThread]: Resource report: {"command_name": "deps", "command_success": false, "command_wall_clock_time": 0.061817, "process_in_blocks": "0", "process_kernel_time": 0.216957, "process_mem_max_rss": "110493696", "process_out_blocks": "0", "process_user_time": 0.814263}
+[0m19:54:34.603750 [debug] [MainThread]: Command `dbt deps` failed at 19:54:34.603679 after 0.06 seconds
+[0m19:54:34.604012 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10de3df50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10de3f210>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10dde2dd0>]}
+[0m19:54:34.604265 [debug] [MainThread]: Flushing usage events
+[0m19:54:35.956202 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m22:51:28.573893 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x105f26660>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10756bb10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10756bd90>]}
+
+
+============================== 22:51:28.577879 | 925236e5-95b6-41e6-bda1-f3d405fab333 ==============================
+[0m22:51:28.577879 [info ] [MainThread]: Running with dbt=1.11.7
+[0m22:51:28.578190 [debug] [MainThread]: running dbt with arguments {'warn_error': 'None', 'cache_selected_only': 'False', 'target_path': 'None', 'invocation_command': 'dbt init dbt_olist', 'partial_parse': 'True', 'static_parser': 'True', 'introspect': 'True', 'log_cache_events': 'False', 'debug': 'False', 'write_json': 'True', 'version_check': 'True', 'fail_fast': 'False', 'quiet': 'False', 'printer_width': '80', 'log_path': 'logs', 'send_anonymous_usage_stats': 'True', 'use_experimental_parser': 'False', 'use_colors': 'True', 'empty': 'None', 'log_format': 'default', 'indirect_selection': 'eager', 'no_print': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'profiles_dir': '/Users/thienngocpham/.dbt'}
+[0m22:51:28.589464 [debug] [MainThread]: Starter project path: /opt/anaconda3/lib/python3.13/site-packages/dbt/include/starter_project
+[0m22:51:28.594133 [info ] [MainThread]: 
+Your new dbt project "dbt_olist" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m22:51:28.594335 [info ] [MainThread]: Setting up your profile.

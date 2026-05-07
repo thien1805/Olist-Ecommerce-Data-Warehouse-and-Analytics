@@ -5,6 +5,8 @@
 # 2. Export tất cả các biến đã load từ .env vào shell môi trường
 export
 
+DBT_DOCS_PORT ?= 8081
+
 # Định nghĩa các Targets
 to_mysql:
 	docker exec -it mysql mysql -u"$(MYSQL_USER)" -p"$(MYSQL_PASSWORD)" $(MYSQL_DATABASE)
@@ -17,3 +19,6 @@ mysql_create:
 
 mysql_load:
 	docker exec -it mysql mysql --local_infile=1 -u"$(MYSQL_USER)" -p"$(MYSQL_PASSWORD)" $(MYSQL_DATABASE) -e"source /tmp/load_dataset/load_data.sql"
+
+dbt_docs_serve:
+	cd dbt_olist && . ../.venv/bin/activate && dbt docs serve --port $(DBT_DOCS_PORT)

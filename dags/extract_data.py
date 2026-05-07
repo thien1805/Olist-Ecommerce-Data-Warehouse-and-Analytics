@@ -10,7 +10,7 @@ from postgresql_operator import PostgresOperators
 def extract_and_load_to_staging(**kwargs):
     source_operator = MySQLOperator("mysql")
     staging_operator = PostgresOperators("postgres")
-
+    
     # Ensure target schemas exist before pandas.to_sql writes tables.
     staging_operator.execute_query("CREATE SCHEMA IF NOT EXISTS staging;")
     staging_operator.execute_query("CREATE SCHEMA IF NOT EXISTS warehouse;")

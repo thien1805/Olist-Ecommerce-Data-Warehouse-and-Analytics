@@ -76,6 +76,8 @@ x-airflow-common: #cấu hình tái sử dụng
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs #log persistent, không bị mất khi container bị xoá
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config #config tuỳ chỉnh
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins #custom plugin/operator
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt_olist:/opt/airflow/dbt #mount dbt project vào airflow container
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt_olist/profiles:/home/airflow/.dbt #dbt profiles cho airflow user
   env_file: .env
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

@@ -4,9 +4,9 @@ dbt_olist:
     dev:
       type: postgres
       host: de_psql
+      port: 5432
       user: admin
       password: admin
-      port: 5432
       dbname: postgres
-      schema: analytics
+      schema: warehouse
       threads: 4

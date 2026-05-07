@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: staging
+    schema: staging
+    description: "Raw data loaded from MySQL by Airflow extract_data.py"
+    tables:
+      - name: stg_customers
+        description: "Customer data"
+      - name: stg_orders
+        description: "Orders data"
+      - name: stg_order_items
+        description: "Order items data"
+      - name: stg_payments
+        description: "Payment data"
+      - name: stg_products
+        description: "Products data"
+      - name: stg_product_category_name_translation
+        description: "Product category name translations"
+      - name: stg_sellers
+        description: "Sellers data"
+      - name: stg_geolocation
+        description: "Geolocation data"
+      - name: stg_order_reviews
+        description: "Order reviews data"
