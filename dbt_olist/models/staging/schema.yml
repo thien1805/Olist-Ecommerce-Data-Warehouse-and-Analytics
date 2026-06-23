@@ -1,0 +1,111 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Cleaned order headers with normalized status and timestamp fields."
+    columns:
+      - name: order_id
+        description: "Primary key of an order."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Customer identifier from the raw customer table."
+        tests:
+          - not_null
+      - name: order_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['delivered', 'shipped', 'canceled', 'unavailable',
+                       'invoiced', 'processing', 'created', 'approved']
+
+  - name: stg_customers
+    description: "Cleaned customer records with normalized city, state, and zip code fields."
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_order_items
+    description: "Cleaned order line items. Grain is one row per order item."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: product_id
+        tests:
+          - not_null
+      - name: seller_id
+        tests:
+          - not_null
+      - name: price
+        tests:
+          - not_null
+
+  - name: stg_payments
+    description: "Cleaned payment transactions. Grain is one row per order payment sequence."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: payment_value
+        tests:
+          - not_null
+
+  - name: stg_products
+    description: "Cleaned product catalog records."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_sellers
+    description: "Cleaned seller records with normalized city, state, and zip code fields."
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_geolocation
+    description: "Deduplicated geolocation records by zip code prefix."
+    columns:
+      - name: geolocation_zip_code_prefix
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_category_translation
+    description: "Product category translation from Portuguese to English."
+    columns:
+      - name: product_category_name
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_order_reviews
+    description: "Cleaned order review records with review score and review timestamps."
+    columns:
+      - name: review_id
+        tests:
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_orders')
+              field: order_id
+      - name: review_score
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5]

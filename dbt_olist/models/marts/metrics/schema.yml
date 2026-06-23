@@ -1,0 +1,121 @@
+version: 2
+
+models:
+  - name: agg_monthly_sales
+    description: "Monthly sales KPI mart for Tableau executive dashboards."
+    columns:
+      - name: month_start_date
+        tests:
+          - unique
+          - not_null
+      - name: gmv
+        description: "Gross merchandise value based on item price plus freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: payment_value_total
+        description: "Total payment value by month."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: average_order_value
+        description: "Average order value by month."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: on_time_delivery_rate
+        description: "Ratio of orders delivered on or before estimated delivery date."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+              config:
+                where: "on_time_delivery_rate is not null"
+      - name: avg_review_score
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 5
+              inclusive: true
+              config:
+                where: "avg_review_score is not null"
+
+  - name: agg_product_category_performance
+    description: "Product category performance mart for revenue and item analysis."
+    columns:
+      - name: product_category_name_english
+        tests:
+          - unique
+          - not_null
+      - name: total_amount
+        description: "Total line item amount including freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: item_price_total
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: freight_value_total
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: agg_delivery_performance
+    description: "Delivery performance mart by customer state and city."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - customer_state
+            - customer_city
+    columns:
+      - name: customer_state
+        tests:
+          - not_null
+      - name: total_orders
+        description: "Number of orders for the geography."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: on_time_delivery_rate
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+              config:
+                where: "on_time_delivery_rate is not null"
+      - name: gmv
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: avg_review_score
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 5
+              inclusive: true
+              config:
+                where: "avg_review_score is not null"
+
+  - name: agg_seller_performance
+    description: "Seller performance mart by seller geography."
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+      - name: total_amount
+        description: "Total seller line item amount including freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: item_price_total
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: freight_value_total
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0

@@ -22,5 +22,8 @@ models:
     intermediate:
       +materialized: ephemeral     # Ephemeral — chỉ tồn tại như CTE, không tạo object trong DB
     marts:
-      +materialized: table         # Tables — persist data, sẵn sàng cho BI tools
       +schema: warehouse
+      core:
+        +materialized: table       # Core dim/fact tables for BI relationships
+      metrics:
+        +materialized: table       # Aggregated marts optimized for dashboard queries

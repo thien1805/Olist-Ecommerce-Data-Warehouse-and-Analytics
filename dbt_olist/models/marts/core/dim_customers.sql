@@ -1,4 +1,4 @@
--- Marts: dim_customers — final dimension table
+-- Core mart: customer dimension
 {{ config(materialized='table') }}
 
 select

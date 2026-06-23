@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: int_order_items_aggregated
+    description: "Order item metrics aggregated to one row per order."
+    columns:
+      - name: order_id
+        description: "Primary order identifier."
+        tests:
+          - unique
+          - not_null
+      - name: order_items_total
+        description: "Total item price plus freight for the order."
+
+  - name: int_order_payments_aggregated
+    description: "Payment metrics aggregated to one row per order."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: payment_value_total
+        description: "Total payment value across all payment sequences for the order."
+
+  - name: int_order_reviews_aggregated
+    description: "Review metrics aggregated to one row per order."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: avg_review_score
+        description: "Average review score for the order."
+
+  - name: int_products_joined
+    description: "Product catalog enriched with English category translation."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: "English product category name used for BI reporting."
+
+  - name: int_orders_enriched
+    description: "Order-level model enriched with customer, item, payment, review, and delivery metrics."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: order_status
+        description: "Normalized Olist order status."
+      - name: order_items_total
+        description: "Total item price plus freight at order grain."
+      - name: payment_value_total
+        description: "Total payment value at order grain."
+      - name: is_delivered_on_time
+        description: "True when delivered customer date is on or before estimated delivery date."

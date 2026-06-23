@@ -65,8 +65,24 @@ x-airflow-common: #cấu hình tái sử dụng
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true' #bật health check server trên scheduler để có thể kiểm tra sức khỏe của scheduler thông qua API
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '120'
+    AIRFLOW__SCHEDULER__DAG_FILE_PROCESSOR_TIMEOUT: '180'
+    # Cosmos/dbt local dev on macOS: avoid hashing/writing artifacts on Docker bind mounts.
+    AIRFLOW__COSMOS__ENABLE_CACHE_DBT_LS: 'true'
+    AIRFLOW__COSMOS__CACHE_DIR: '/tmp/cosmos-cache'
+    DBT_TARGET_PATH: '/tmp/dbt_target'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
+    # Email / SMTP config
+        # Email / SMTP config
+    AIRFLOW__SMTP__SMTP_HOST: 'smtp.gmail.com'
+    AIRFLOW__SMTP__SMTP_PORT: 587
+    AIRFLOW__SMTP__SMTP_STARTTLS: 'true'
+    AIRFLOW__SMTP__SMTP_SSL: 'false'
+    AIRFLOW__SMTP__SMTP_USER: ${SMTP_USER}
+    AIRFLOW__SMTP__SMTP_PASSWORD: ${SMTP_PASSWORD}
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: ${SMTP_MAIL_FROM}
+
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}  
     # The following line can be used to set a custom config file, stored in the local config folder
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
@@ -263,6 +279,8 @@ services:
     volumes:
       - ./dbt_olist:/usr/app/dbt
       - ./dbt_olist/profiles:/root/.dbt
+    environment:
+      DBT_TARGET_PATH: /tmp/dbt_target
     entrypoint: ["/bin/sh", "-c"]
     command: ["tail -f /dev/null"]
     depends_on:

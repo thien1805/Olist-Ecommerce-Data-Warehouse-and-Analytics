@@ -1,0 +1,195 @@
+version: 2
+
+models:
+  - name: fact_orders
+    description: "Order-level fact table. Grain is one row per order, with sales, payment, delivery, and review metrics."
+    columns:
+      - name: order_id
+        description: "Primary order identifier."
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: "Foreign key to dim_customers."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_key
+      - name: order_date_key
+        description: "Foreign key to dim_date using order purchase date."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: order_items_total
+        description: "Total product price plus freight at order grain."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: item_price_total
+        description: "Total product price at order grain."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: freight_value_total
+        description: "Total freight value at order grain."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: payment_value_total
+        description: "Total payment value at order grain."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: order_item_count
+        description: "Number of order items in the order."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: payment_count
+        description: "Number of payment rows in the order."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: avg_review_score
+        description: "Average review score for the order."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 5
+              inclusive: true
+              config:
+                where: "avg_review_score is not null"
+      - name: delivery_time_days
+        description: "Actual delivery duration in days."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              config:
+                where: "delivery_time_days is not null"
+      - name: estimated_delivery_time_days
+        description: "Estimated delivery duration in days."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              config:
+                where: "estimated_delivery_time_days is not null"
+
+  - name: fact_order_items
+    description: "Order item-level fact table. Grain is one row per order item, optimized for product, seller, and category analysis."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - order_item_id
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: order_item_id
+        tests:
+          - not_null
+      - name: product_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_key
+      - name: seller_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sellers')
+              field: seller_key
+      - name: item_total_amount
+        description: "Line item price plus freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: price
+        description: "Line item product price."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: freight_value
+        description: "Line item freight value."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: dim_customers
+    description: "Customer dimension with account, location, and SCD-style current row fields."
+    columns:
+      - name: customer_key
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_products
+    description: "Product dimension enriched with English category labels."
+    columns:
+      - name: product_key
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: "English category label used in Tableau dashboards."
+
+  - name: dim_sellers
+    description: "Seller dimension with normalized geography attributes."
+    columns:
+      - name: seller_key
+        tests:
+          - unique
+          - not_null
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_geolocation
+    description: "Zip-code prefix geolocation dimension."
+    columns:
+      - name: geolocation_key
+        tests:
+          - unique
+          - not_null
+      - name: geolocation_zip_code_prefix
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_payments
+    description: "Payment transaction dimension retained for payment sequence drill-through."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - payment_sequential
+    columns:
+      - name: payment_key
+        tests:
+          - unique
+          - not_null
+      - name: payment_value
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: dim_date
+    description: "Calendar dimension used for BI time analysis."
+    columns:
+      - name: date_key
+        tests:
+          - unique
+          - not_null

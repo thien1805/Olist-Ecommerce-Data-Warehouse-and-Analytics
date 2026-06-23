@@ -1,0 +1,23 @@
+version: 2
+
+exposures:
+  - name: tableau_sales_overview
+    label: "Tableau Sales Overview Dashboard"
+    type: dashboard
+    maturity: medium
+    url: "tableau://olist-sales-overview"
+    description: "Primary Tableau dashboard reading curated marts from PostgreSQL schema warehouse."
+    depends_on:
+      - ref('fact_orders')
+      - ref('fact_order_items')
+      - ref('dim_customers')
+      - ref('dim_products')
+      - ref('dim_sellers')
+      - ref('dim_date')
+      - ref('agg_monthly_sales')
+      - ref('agg_product_category_performance')
+      - ref('agg_delivery_performance')
+      - ref('agg_seller_performance')
+    owner:
+      name: "Olist Analytics Platform"
+      email: "analytics@example.com"

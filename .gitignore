@@ -75,5 +75,3 @@ data/tmp/
 # Local Python version manager
 # -----------------------------
 .python-version
-
-docs/

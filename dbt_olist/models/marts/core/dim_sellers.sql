@@ -1,4 +1,4 @@
--- Marts: dim_sellers — final dimension table
+-- Core mart: seller dimension
 {{ config(materialized='table') }}
 
 select

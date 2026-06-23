@@ -1,4 +1,4 @@
--- Marts: dim_payments — final dimension table
+-- Core mart: payment transaction dimension
 {{ config(materialized='table') }}
 
 select

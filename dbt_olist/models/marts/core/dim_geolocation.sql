@@ -1,4 +1,4 @@
--- Marts: dim_geolocation — final dimension table
+-- Core mart: geolocation dimension
 {{ config(materialized='table') }}
 
 select

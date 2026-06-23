@@ -1,4 +1,4 @@
--- Marts: dim_date — date dimension generated entirely in SQL
+-- Core mart: date dimension generated entirely in SQL
 {{ config(materialized='table') }}
 
 with date_spine as (
