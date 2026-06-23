@@ -1,45 +1,40 @@
 # Olist Analytics Platform
 
-An end-to-end data engineering and analytics project for the Brazilian Olist e-commerce dataset. The platform turns raw operational data into a tested PostgreSQL warehouse and Tableau-ready marts for sales, payment, seller, and product category analysis.
+An end-to-end analytics engineering project for the Brazilian Olist e-commerce dataset. It builds a reproducible ELT pipeline from raw transactional data to a tested PostgreSQL warehouse and Tableau dashboards.
 
-## What This Project Solves
+## Problem
 
-E-commerce teams often need consistent business metrics across many views: revenue, payments, seller performance, product categories, delivery quality, and customer geography. Raw transactional tables are not easy to analyze directly because they have different grains, duplicated payment risks, and many joins.
+Raw e-commerce tables are difficult to analyze directly because orders, items, payments, sellers, products, reviews, and delivery data all have different grains. This project standardizes those grains, prevents common double-counting issues, and creates BI-ready marts for business reporting.
 
-This project solves that by building a reproducible ELT workflow that:
-
-- Loads Olist source data from MySQL into PostgreSQL staging.
-- Uses Airflow to orchestrate extract, dbt transform, dbt tests, and success notification.
-- Uses Astronomer Cosmos to render dbt models as Airflow tasks.
-- Builds a star-schema warehouse plus Tableau-specific marts.
-- Provides interactive Tableau dashboards with synchronized filters.
-
-## Dashboard Outputs
-
-> Export the Tableau dashboards to the paths below so the README renders the latest screenshots.
-
-| Executive Overview | Payment Overview |
-| --- | --- |
-| ![Olist Executive Overview](dashboard/executive_overview.png) | ![Olist Payment Overview](dashboard/payment_overview.png) |
-
-| Seller Performance | Product Category Performance |
-| --- | --- |
-| ![Olist Seller Performance](dashboard/seller_performance.png) | ![Olist Product Category Performance](dashboard/category_performance.png) |
-
-## Architecture
+## Solution
 
 ```text
 MySQL source
   -> Airflow extract/upsert
   -> PostgreSQL staging
-  -> Cosmos + dbt build/test
+  -> Cosmos + dbt transform/test
   -> PostgreSQL warehouse
   -> Tableau dashboards
 ```
 
-## Core Stack
+The pipeline creates a star-schema warehouse and Tableau presentation marts for:
 
-| Layer | Technology |
+- Executive sales overview
+- Payment method and installment analysis
+- Seller performance
+- Product category performance
+
+## Dashboard Preview
+
+| Sales Overview | Product Overview |
+| --- | --- |
+| ![Sales Overview](dashboard/sales_overview.jpg) | ![Product Overview](dashboard/product_overview.jpg) |
+
+> Payment and Seller dashboard screenshots should be exported into `dashboard/` before adding them here.
+
+## Technology Summary
+
+| Area | Technology |
 | --- | --- |
 | Source database | MySQL |
 | Warehouse | PostgreSQL |
@@ -49,18 +44,9 @@ MySQL source
 | BI | Tableau |
 | Runtime | Docker Compose |
 
-## Data Modeling
+## Warehouse Design
 
-The warehouse keeps a clear modeling flow:
-
-```text
-staging views
-  -> intermediate models
-  -> core star schema
-  -> Tableau presentation marts
-```
-
-Core warehouse models include facts and dimensions such as:
+Core star schema:
 
 - `fact_orders`
 - `fact_order_items`
@@ -71,16 +57,16 @@ Core warehouse models include facts and dimensions such as:
 - `dim_date`
 - `dim_geolocation`
 
-Tableau marts are built at the correct grain for each dashboard:
+Tableau marts:
 
-| Mart | Purpose | Grain |
-| --- | --- | --- |
-| `mart_tableau_sales_dashboard` | Executive sales, delivery, seller, and category overview | 1 row per order item |
-| `mart_tableau_payment_mix` | Payment method, installment, and geography analysis | 1 row per order payment sequence |
-| `mart_tableau_seller_dashboard` | Seller revenue, review, and delivery performance | 1 row per seller order item |
-| `mart_tableau_product_category_dashboard` | Category revenue, freight, review, and delivery analysis | 1 row per category order item |
+| Mart | Purpose |
+| --- | --- |
+| `mart_tableau_sales_dashboard` | Executive sales, delivery, seller, and category overview |
+| `mart_tableau_payment_mix` | Payment method and installment analysis |
+| `mart_tableau_seller_dashboard` | Seller revenue, review, and delivery performance |
+| `mart_tableau_product_category_dashboard` | Category revenue, freight, review, and delivery analysis |
 
-## Airflow Workflow
+## Airflow DAG
 
 Main DAG:
 
@@ -88,7 +74,7 @@ Main DAG:
 e_commerce_elt
 ```
 
-Workflow:
+Task flow:
 
 ```text
 extract_and_upsert_to_staging
@@ -97,50 +83,31 @@ extract_and_upsert_to_staging
   -> send_success_email
 ```
 
-The email step only runs after the dbt models and tests finish successfully.
+The success email is sent only after dbt models and tests pass.
 
 ## Quick Start
-
-Start services:
 
 ```bash
 docker compose build
 docker compose up -d
-```
-
-Load source data into MySQL:
-
-```bash
 make mysql_create
 make mysql_load
 ```
 
-Open Airflow:
-
-```text
-http://localhost:8080
-```
-
-Default login:
-
-```text
-airflow / airflow
-```
-
-Trigger the DAG:
+Trigger the pipeline:
 
 ```bash
 docker exec olist_analytics_platform-airflow-webserver-1 \
   airflow dags trigger e_commerce_elt
 ```
 
-Run dbt tests manually:
+Run dbt manually:
 
 ```bash
 docker exec dbt dbt build
 ```
 
-Connect Tableau to PostgreSQL:
+Tableau connection:
 
 | Field | Value |
 | --- | --- |
@@ -151,15 +118,13 @@ Connect Tableau to PostgreSQL:
 | Password | `admin` |
 | Schema | `warehouse` |
 
-## Key Metrics
+## Project Direction
 
-- GMV
-- Payment value
-- Average order value
-- Order count
-- Seller count
-- Category count
-- On-time delivery rate
-- Average review score
-- Freight share
-- Payment method share
+Next improvements:
+
+- Add exported screenshots for all four Tableau dashboards.
+- Add incremental dbt models for larger data volumes.
+- Add data freshness checks and source-level quality alerts.
+- Add CI to run dbt parse/build checks before merging.
+- Extend dashboards with customer cohort and repeat purchase analysis.
+
