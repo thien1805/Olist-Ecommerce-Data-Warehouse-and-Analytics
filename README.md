@@ -24,6 +24,10 @@ The pipeline creates a star-schema warehouse and Tableau presentation marts for:
 - Seller performance
 - Product category performance
 
+## Architecture Diagram
+
+![Olist ELT Architecture](dashboard/architecture/architecture.png)
+
 ## Dashboard Preview
 
 | Executive Overview | Payment Performance |
@@ -102,6 +106,13 @@ extract_and_upsert_to_staging
 ```
 
 The success email is sent only after dbt models and tests pass.
+
+Schedule:
+
+```text
+Runs once per day
+catchup = False
+```
 
 ## Quick Start
 
