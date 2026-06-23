@@ -26,11 +26,13 @@ The pipeline creates a star-schema warehouse and Tableau presentation marts for:
 
 ## Dashboard Preview
 
-| Sales Overview | Product Overview |
+| Executive Overview | Payment Performance |
 | --- | --- |
-| ![Sales Overview](dashboard/sales_overview.jpg) | ![Product Overview](dashboard/product_overview.jpg) |
+| ![Executive Overview](dashboard/Executive%20Overview.png) | ![Payment Performance](dashboard/Payment%20Performance.png) |
 
-> Payment and Seller dashboard screenshots should be exported into `dashboard/` before adding them here.
+| Seller Performance | Category Performance |
+| --- | --- |
+| ![Seller Performance](dashboard/Seller%20Performance.png) | ![Category Performance](dashboard/Category%20Performance.png) |
 
 ## Technology Summary
 
@@ -43,6 +45,14 @@ The pipeline creates a star-schema warehouse and Tableau presentation marts for:
 | Transformation | dbt Core |
 | BI | Tableau |
 | Runtime | Docker Compose |
+
+## Techniques Used
+
+- **ELT orchestration**: Airflow controls extract/upsert, dbt transformation, dbt tests, and success notification.
+- **dbt modeling**: staging, intermediate, core star schema, and dashboard-specific marts.
+- **Grain-aware marts**: separate marts for order items, payment transactions, sellers, and product categories to avoid double-counting.
+- **Data quality checks**: dbt schema tests and reconciliation tests validate payment, GMV, relationships, and dashboard totals.
+- **BI-ready design**: Tableau marts are denormalized enough for simple filters, KPIs, and interactive dashboards.
 
 ## Warehouse Design
 
@@ -65,6 +75,14 @@ Tableau marts:
 | `mart_tableau_payment_mix` | Payment method and installment analysis |
 | `mart_tableau_seller_dashboard` | Seller revenue, review, and delivery performance |
 | `mart_tableau_product_category_dashboard` | Category revenue, freight, review, and delivery analysis |
+
+## Business Applications
+
+- Track GMV, AOV, review score, and on-time delivery performance.
+- Analyze payment methods, installment behavior, and regional payment value.
+- Identify top sellers and seller states by revenue and delivery quality.
+- Compare product categories by revenue, freight share, review score, and delivery performance.
+- Provide clean Tableau datasets for business users without requiring manual joins.
 
 ## Airflow DAG
 
@@ -122,9 +140,7 @@ Tableau connection:
 
 Next improvements:
 
-- Add exported screenshots for all four Tableau dashboards.
 - Add incremental dbt models for larger data volumes.
 - Add data freshness checks and source-level quality alerts.
 - Add CI to run dbt parse/build checks before merging.
 - Extend dashboards with customer cohort and repeat purchase analysis.
-
