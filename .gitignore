@@ -72,6 +72,11 @@ data/tmp/
 *.bak
 
 # -----------------------------
+# Local documentation notes
+# -----------------------------
+docs/
+
+# -----------------------------
 # Local Python version manager
 # -----------------------------
 .python-version
