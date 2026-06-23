@@ -122,6 +122,146 @@ models:
               config:
                 where: "is_delivered_on_time_int is not null"
 
+  - name: mart_tableau_seller_dashboard
+    description: "Seller-focused Tableau mart at order-item grain for seller performance dashboards with synchronized filters."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - order_item_id
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: order_item_id
+        tests:
+          - not_null
+      - name: month_start_date
+        description: "Month bucket used as the main Tableau date filter."
+        tests:
+          - not_null
+      - name: seller_id
+        description: "Seller filter and drill-down identifier."
+        tests:
+          - not_null
+      - name: seller_state
+        description: "Seller state filter."
+        tests:
+          - not_null
+      - name: seller_location
+        description: "Display-friendly seller city and state label."
+        tests:
+          - not_null
+      - name: product_category_name_english
+        description: "Product category filter for seller performance analysis."
+        tests:
+          - not_null
+      - name: customer_state
+        description: "Customer geography filter for Tableau."
+        tests:
+          - not_null
+      - name: gmv
+        description: "Item-level GMV amount, price plus freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: allocated_payment_value
+        description: "Order payment value allocated to item rows to prevent duplicated payment totals in Tableau."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: order_weight
+        description: "1/order_item_count, useful for weighted order-level metrics."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+              config:
+                where: "order_weight is not null"
+      - name: is_delivered_on_time_int
+        description: "1 when delivered on time, 0 when late, null when not applicable."
+        tests:
+          - accepted_values:
+              values: [0, 1]
+              config:
+                where: "is_delivered_on_time_int is not null"
+
+  - name: mart_tableau_product_category_dashboard
+    description: "Product-category-focused Tableau mart at order-item grain for category performance dashboards with synchronized filters."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - order_item_id
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: order_item_id
+        tests:
+          - not_null
+      - name: month_start_date
+        description: "Month bucket used as the main Tableau date filter."
+        tests:
+          - not_null
+      - name: product_category_name_english
+        description: "Product category filter and drill-down label."
+        tests:
+          - not_null
+      - name: product_weight_bucket
+        description: "Display-friendly product weight group."
+        tests:
+          - not_null
+      - name: seller_id
+        description: "Seller filter and drill-down identifier."
+        tests:
+          - not_null
+      - name: seller_state
+        description: "Seller geography filter for category analysis."
+        tests:
+          - not_null
+      - name: customer_state
+        description: "Customer geography filter for Tableau."
+        tests:
+          - not_null
+      - name: gmv
+        description: "Item-level GMV amount, price plus freight."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: freight_value
+        description: "Item-level freight amount."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: item_price
+        description: "Item-level product price."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: allocated_payment_value
+        description: "Order payment value allocated to item rows to prevent duplicated payment totals in Tableau."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: order_weight
+        description: "1/order_item_count, useful for weighted order-level metrics."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+              config:
+                where: "order_weight is not null"
+      - name: is_delivered_on_time_int
+        description: "1 when delivered on time, 0 when late, null when not applicable."
+        tests:
+          - accepted_values:
+              values: [0, 1]
+              config:
+                where: "is_delivered_on_time_int is not null"
+
   - name: agg_monthly_sales
     description: "Monthly sales KPI mart for Tableau executive dashboards."
     columns:

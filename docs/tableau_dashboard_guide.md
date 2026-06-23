@@ -14,6 +14,13 @@ Nếu muốn làm dashboard riêng cho payment method mix, dùng tài liệu:
 docs/tableau_payment_dashboard_guide.md
 ```
 
+Nếu muốn làm dashboard riêng cho seller và product category, dùng:
+
+```text
+docs/tableau_seller_dashboard_guide.md
+docs/tableau_product_category_dashboard_guide.md
+```
+
 ## 1. Mục Tiêu Dashboard
 
 Dashboard nên trả lời 4 nhóm câu hỏi chính:
@@ -66,6 +73,8 @@ Khuyến nghị mới nhất: dùng một bảng chính cho dashboard để KPI 
 | --- | --- |
 | `warehouse.mart_tableau_sales_dashboard` | Data source chính cho Tableau dashboard có filter đồng bộ |
 | `warehouse.mart_tableau_payment_mix` | Data source riêng cho payment method mix, đúng grain payment transaction |
+| `warehouse.mart_tableau_seller_dashboard` | Data source riêng cho Seller Performance dashboard |
+| `warehouse.mart_tableau_product_category_dashboard` | Data source riêng cho Product Category Performance dashboard |
 
 Bảng `mart_tableau_sales_dashboard` có grain `one row per order item`, nhưng đã có thêm:
 

@@ -1,170 +1,178 @@
 # Olist Analytics Platform
 
-End-to-end Data Engineering + BI project for Olist e-commerce data (Brazil, ~100K orders).
+An end-to-end data engineering and analytics project for the Brazilian Olist e-commerce dataset. The platform turns raw operational data into a tested PostgreSQL warehouse and Tableau-ready marts for sales, payment, seller, and product category analysis.
 
-Built with an **ELT architecture**: Apache Airflow extracts raw data from MySQL into PostgreSQL, then **Astronomer Cosmos + dbt** transforms it into an analytics-ready warehouse using a 3-layer model (staging → intermediate → marts).
+## What This Project Solves
+
+E-commerce teams often need consistent business metrics across many views: revenue, payments, seller performance, product categories, delivery quality, and customer geography. Raw transactional tables are not easy to analyze directly because they have different grains, duplicated payment risks, and many joins.
+
+This project solves that by building a reproducible ELT workflow that:
+
+- Loads Olist source data from MySQL into PostgreSQL staging.
+- Uses Airflow to orchestrate extract, dbt transform, dbt tests, and success notification.
+- Uses Astronomer Cosmos to render dbt models as Airflow tasks.
+- Builds a star-schema warehouse plus Tableau-specific marts.
+- Provides interactive Tableau dashboards with synchronized filters.
+
+## Dashboard Outputs
+
+> Export the Tableau dashboards to the paths below so the README renders the latest screenshots.
+
+| Executive Overview | Payment Overview |
+| --- | --- |
+| ![Olist Executive Overview](dashboard/executive_overview.png) | ![Olist Payment Overview](dashboard/payment_overview.png) |
+
+| Seller Performance | Product Category Performance |
+| --- | --- |
+| ![Olist Seller Performance](dashboard/seller_performance.png) | ![Olist Product Category Performance](dashboard/category_performance.png) |
 
 ## Architecture
 
-```
-MySQL (Source)                PostgreSQL                      Tableau / Metabase
-  9 raw tables    ──────>    schema: staging    ──────>      Dashboard
-                  Airflow         │              Cosmos + dbt
-                  Extract         ▼              Transform
-                             schema: staging_dbt
-                             (views — clean data)
-                                  │
-                                  ▼
-                             schema: warehouse
-                             (tables — dim & fact)
+```text
+MySQL source
+  -> Airflow extract/upsert
+  -> PostgreSQL staging
+  -> Cosmos + dbt build/test
+  -> PostgreSQL warehouse
+  -> Tableau dashboards
 ```
 
-### Airflow DAG: `e_commerce_elt`
+## Core Stack
 
-```
-drop_dbt_staging_views → extract_and_load_to_staging → dbt_transform [Cosmos DbtTaskGroup] → send_success_email
-```
+| Layer | Technology |
+| --- | --- |
+| Source database | MySQL |
+| Warehouse | PostgreSQL |
+| Orchestration | Apache Airflow |
+| dbt orchestration | Astronomer Cosmos |
+| Transformation | dbt Core |
+| BI | Tableau |
+| Runtime | Docker Compose |
 
-## Tech Stack
+## Data Modeling
 
-| Component | Technology | Role |
-|---|---|---|
-| Source DB | MySQL 8.0 | Operational data (Olist dataset) |
-| Data Warehouse | PostgreSQL 14 | Staging + warehouse schemas |
-| Orchestrator | Apache Airflow 2.9.2 | Schedule & trigger pipeline |
-| Transform | dbt-core + Astronomer Cosmos | SQL-based transform on PostgreSQL, rendered as Airflow task graph |
-| BI Dashboard | Tableau / Metabase | Data visualization |
-| Infrastructure | Docker Compose | 7 containerized services |
+The warehouse keeps a clear modeling flow:
 
-## Data Warehouse — Star Schema
-
-```
-                    ┌──────────────┐
-                    │  dim_date    │
-                    └──────┬───────┘
-┌──────────────┐           │           ┌──────────────┐
-│dim_customers │───┐       │       ┌───│ dim_sellers   │
-└──────────────┘   │       │       │   └──────────────┘
-                   ▼       ▼       ▼
-┌──────────────┐  ┌────────────────┐  ┌──────────────┐
-│dim_geolocation│→│  fact_orders   │←│ dim_products  │
-└──────────────┘  └────────────────┘  └──────────────┘
-                         ▲
-                   ┌─────┘
-                   │
-              ┌────────────┐
-              │dim_payments│
-              └────────────┘
+```text
+staging views
+  -> intermediate models
+  -> core star schema
+  -> Tableau presentation marts
 ```
 
-### dbt 3-Layer Model
+Core warehouse models include facts and dimensions such as:
 
-| Layer | Schema | Materialization | Models | Purpose |
-|---|---|---|---|---|
-| **Staging** | `staging_dbt` | VIEW | 9 | Clean, cast types, normalize strings |
-| **Intermediate** | *(CTE only)* | EPHEMERAL | 5 | Aggregate raw tables to the correct grain and compute delivery/review/payment metrics |
-| **Marts/Core** | `warehouse` | TABLE | 8 | Final dimensions and facts for BI relationships |
-| **Marts/Metrics** | `warehouse` | TABLE | 4 | Aggregated KPI marts optimized for Tableau dashboards |
+- `fact_orders`
+- `fact_order_items`
+- `dim_customers`
+- `dim_products`
+- `dim_sellers`
+- `dim_payments`
+- `dim_date`
+- `dim_geolocation`
 
-## Repository Structure
+Tableau marts are built at the correct grain for each dashboard:
 
+| Mart | Purpose | Grain |
+| --- | --- | --- |
+| `mart_tableau_sales_dashboard` | Executive sales, delivery, seller, and category overview | 1 row per order item |
+| `mart_tableau_payment_mix` | Payment method, installment, and geography analysis | 1 row per order payment sequence |
+| `mart_tableau_seller_dashboard` | Seller revenue, review, and delivery performance | 1 row per seller order item |
+| `mart_tableau_product_category_dashboard` | Category revenue, freight, review, and delivery analysis | 1 row per category order item |
+
+## Airflow Workflow
+
+Main DAG:
+
+```text
+e_commerce_elt
 ```
-├── dags/
-│   ├── extract_data.py                   # Extract: MySQL → PostgreSQL staging
-│   └── transform/
-│       └── e_commerce_dw_dag.py          # DAG: drop → extract → deps → run → test
-│
-├── dbt_olist/                            # dbt project
-│   ├── dbt_project.yml                   # 3-layer materialization config
-│   ├── packages.yml                      # dbt_utils
-│   ├── profiles/profiles.yml             # PostgreSQL connection
-│   ├── macros/
-│   │   ├── generate_schema_name.sql      # Override schema naming
-│   │   └── drop_staging_views.sql        # Pre-extract cleanup
-│   └── models/
-│       ├── staging/                      # 9 views (clean raw data)
-│       ├── intermediate/                 # 5 ephemeral models (aggregate & enrich)
-│       └── marts/
-│           ├── core/                     # dim/fact tables
-│           └── metrics/                  # aggregate BI marts
-│
-├── plugins/                              # Custom Airflow operators
-├── data/raw/                             # Source CSV files
-├── docs/                                 # Project documentation
-├── docker-compose.yaml
-├── Dockerfile
-└── requirements.txt
+
+Workflow:
+
+```text
+extract_and_upsert_to_staging
+  -> dbt_transform
+  -> dbt_test
+  -> send_success_email
 ```
+
+The email step only runs after the dbt models and tests finish successfully.
 
 ## Quick Start
 
-### Prerequisites
-- Docker & Docker Compose
-- Free ports: 3000, 3307, 5433, 8080
-
-### 1. Start all services
+Start services:
 
 ```bash
 docker compose build
 docker compose up -d
 ```
 
-### 2. Load CSV data into MySQL (first time only)
+Load source data into MySQL:
 
 ```bash
 make mysql_create
 make mysql_load
 ```
 
-### 3. Configure Airflow connections (first time only)
+Open Airflow:
 
-Open http://localhost:8080 (login: `airflow` / `airflow`)
+```text
+http://localhost:8080
+```
 
-Create connections in **Admin → Connections**:
+Default login:
 
-| Conn ID | Type | Host | Schema | Login | Password | Port |
-|---|---|---|---|---|---|---|
-| `mysql` | MySQL | mysql | olist | admin | admin | 3306 |
-| `postgres` | Postgres | de_psql | postgres | admin | admin | 5432 |
+```text
+airflow / airflow
+```
 
-### 4. Run the pipeline
+Trigger the DAG:
 
-**Via Airflow UI:**
-- Find DAG `e_commerce_elt` → Unpause → Trigger
-
-**Via CLI:**
 ```bash
 docker exec olist_analytics_platform-airflow-webserver-1 \
   airflow dags trigger e_commerce_elt
 ```
 
-### 5. View dashboard
+Run dbt tests manually:
 
-- **Metabase**: http://localhost:3000
-- **PostgreSQL**: `localhost:5433` (schema: `warehouse`)
+```bash
+docker exec dbt dbt build
+```
 
-## KPIs Tracked
+Connect Tableau to PostgreSQL:
 
-- GMV (Gross Merchandise Value)
-- Total Orders & AOV (Average Order Value)
-- Cancel Rate
-- Delivery Performance (on-time vs late)
-- Top categories / cities / states by revenue
+| Field | Value |
+| --- | --- |
+| Server | `localhost` |
+| Port | `5433` |
+| Database | `postgres` |
+| Username | `admin` |
+| Password | `admin` |
+| Schema | `warehouse` |
 
-## Dashboard Preview
+## Key Metrics
 
-### Sales Overview
-
-![Sales Overview](dashboard/sales_overview.jpg)
-
-### Products Overview
-
-![Products Overview](dashboard/product_overview.jpg)
+- GMV
+- Payment value
+- Average order value
+- Order count
+- Seller count
+- Category count
+- On-time delivery rate
+- Average review score
+- Freight share
+- Payment method share
 
 ## Documentation
 
 | Document | Description |
-|---|---|
-| [Project Overview](docs/project_overview.md) | Architecture, schemas, DAG details |
-| [Migration Guide (ETL → ELT)](docs/migration_etl_to_elt_dbt.md) | Step-by-step migration, troubleshooting, advanced roadmap |
-| [Cosmos + dbt Modeling Workflow](docs/cosmos_dbt_modeling_workflow.md) | Cosmos DAG, dbt layers, fact/dim grains, Tableau marts |
+| --- | --- |
+| [Project Overview](docs/project_overview.md) | Architecture and project structure |
+| [Cosmos + dbt Workflow](docs/cosmos_dbt_modeling_workflow.md) | Airflow Cosmos and dbt modeling flow |
+| [Tableau Dashboard Guide](docs/tableau_dashboard_guide.md) | Main Tableau guide |
+| [Sales Dashboard Guide](docs/tableau_mart_sales_dashboard_guide.md) | Executive overview dashboard |
+| [Payment Dashboard Guide](docs/tableau_payment_dashboard_guide.md) | Payment dashboard |
+| [Seller Dashboard Guide](docs/tableau_seller_dashboard_guide.md) | Seller dashboard |
+| [Product Category Dashboard Guide](docs/tableau_product_category_dashboard_guide.md) | Product category dashboard |
+
