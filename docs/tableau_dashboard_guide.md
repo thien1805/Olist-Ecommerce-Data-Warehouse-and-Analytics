@@ -2,6 +2,18 @@
 
 Tài liệu này hướng dẫn tạo dashboard Tableau từ PostgreSQL warehouse của project hiện tại.
 
+Nếu muốn làm dashboard chính theo workflow mới nhất, bắt đầu từ tài liệu này trước:
+
+```text
+docs/tableau_mart_sales_dashboard_guide.md
+```
+
+Nếu muốn làm dashboard riêng cho payment method mix, dùng tài liệu:
+
+```text
+docs/tableau_payment_dashboard_guide.md
+```
+
 ## 1. Mục Tiêu Dashboard
 
 Dashboard nên trả lời 4 nhóm câu hỏi chính:
@@ -48,6 +60,26 @@ Nếu Tableau không thấy PostgreSQL connector, cần cài PostgreSQL driver c
 
 ## 3. Bảng Nên Dùng Trước
 
+Khuyến nghị mới nhất: dùng một bảng chính cho dashboard để KPI cards và charts dùng chung filter.
+
+| Bảng | Dùng để làm gì |
+| --- | --- |
+| `warehouse.mart_tableau_sales_dashboard` | Data source chính cho Tableau dashboard có filter đồng bộ |
+| `warehouse.mart_tableau_payment_mix` | Data source riêng cho payment method mix, đúng grain payment transaction |
+
+Bảng `mart_tableau_sales_dashboard` có grain `one row per order item`, nhưng đã có thêm:
+
+- `allocated_payment_value`: payment được phân bổ xuống item để không bị nhân bản payment.
+- `month_start_date`: filter tháng dùng chung.
+- `product_category_name_english`: filter category dùng chung.
+- `seller_id`, `seller_state`, `seller_city`: filter seller dùng chung.
+- `customer_state`, `customer_city`: filter geography dùng chung.
+- `is_delivered_on_time_int`: dùng cho delivery KPI.
+
+Với dashboard đầu tiên, hãy connect Tableau vào bảng này trước.
+
+Các bảng aggregate bên dưới vẫn dùng được nếu bạn muốn làm dashboard riêng từng chủ đề:
+
 Ưu tiên dùng 4 bảng aggregate vì đã sẵn sàng cho BI, ít cần join phức tạp:
 
 | Bảng | Dùng để làm gì |
@@ -70,7 +102,20 @@ Sau đó mới dùng bảng fact/dim để drill-down:
 
 ## 4. Data Source Gợi Ý
 
-Làm dashboard đầu tiên bằng 4 data source độc lập:
+Làm dashboard đầu tiên bằng 1 data source:
+
+```text
+warehouse.mart_tableau_sales_dashboard
+```
+
+Cách này giúp filter đồng bộ trên toàn dashboard:
+
+- Month filter ảnh hưởng KPI, trend, category, seller, delivery.
+- Category filter ảnh hưởng KPI, trend, seller, delivery.
+- State filter ảnh hưởng KPI, trend, category, seller.
+- Seller filter ảnh hưởng KPI, trend, category, delivery.
+
+Nếu muốn so sánh với mart aggregate, vẫn có thể làm dashboard phụ bằng 4 data source độc lập:
 
 1. `agg_monthly_sales`
 2. `agg_product_category_performance`
@@ -78,6 +123,56 @@ Làm dashboard đầu tiên bằng 4 data source độc lập:
 4. `agg_delivery_performance`
 
 Không cần join 4 bảng aggregate với nhau trong Tableau. Mỗi worksheet dùng đúng bảng phù hợp. Cách này dễ làm, ít lỗi grain, dashboard chạy nhanh.
+
+## 4.1. Calculated Fields Cho Data Source Chính
+
+Tạo các calculated fields này trong Tableau nếu dùng `mart_tableau_sales_dashboard`.
+
+### Total GMV
+
+```text
+SUM([gmv])
+```
+
+### Payment Total
+
+```text
+SUM([allocated_payment_value])
+```
+
+Không dùng `SUM([payment_value_total])` trong mart item-level vì sẽ bị nhân bản theo số item. Mart này đã chuẩn hóa bằng `allocated_payment_value`.
+
+### Order Count
+
+```text
+COUNTD([order_id])
+```
+
+### Average Order Value
+
+```text
+SUM([gmv]) / COUNTD([order_id])
+```
+
+### On-Time Delivery Rate
+
+```text
+COUNTD(
+    IF [is_delivered_on_time_int] = 1 THEN [order_id] END
+)
+/
+COUNTD(
+    IF NOT ISNULL([is_delivered_on_time_int]) THEN [order_id] END
+)
+```
+
+Format percentage.
+
+### Average Review Score
+
+```text
+AVG([avg_review_score])
+```
 
 ## 5. Calculated Fields Nên Tạo
 
@@ -366,4 +461,3 @@ Khuyến nghị cho project demo:
   - 1 category chart
   - 1 seller chart
   - 1 delivery geography chart
-

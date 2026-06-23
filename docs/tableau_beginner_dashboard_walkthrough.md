@@ -8,7 +8,7 @@ Trong Tableau có 3 khái niệm dễ nhầm:
 
 | Thành phần | Ý nghĩa | Dùng khi nào |
 | --- | --- | --- |
-| Data Source | Nơi kết nối dữ liệu, ví dụ PostgreSQL table | Kết nối `warehouse.agg_monthly_sales` |
+| Data Source | Nơi kết nối dữ liệu, ví dụ PostgreSQL table | Kết nối `warehouse.mart_tableau_sales_dashboard` |
 | Worksheet | Một biểu đồ hoặc một bảng phân tích | Một line chart, một bar chart, một KPI card |
 | Dashboard | Một trang ghép nhiều worksheet lại | Trang executive overview có nhiều KPI và chart |
 
@@ -82,6 +82,14 @@ Tableau sẽ đọc PostgreSQL warehouse:
 | Password | `admin` |
 | Schema | `warehouse` |
 
+Dashboard chính nên dùng bảng:
+
+```text
+warehouse.mart_tableau_sales_dashboard
+```
+
+Bảng này được tạo riêng để KPI cards và charts dùng chung filter trong Tableau.
+
 ## 4. Kết Nối PostgreSQL Trong Tableau
 
 1. Mở Tableau Desktop.
@@ -104,22 +112,70 @@ Nếu chưa thấy PostgreSQL connector, cài PostgreSQL driver cho Tableau rồ
 
 ## 5. Cách Chọn Bảng Cho Dashboard Đầu Tiên
 
-Với người mới, đừng join quá nhiều bảng ngay trong Tableau. Dùng các bảng aggregate đã được dbt chuẩn bị:
+Với người mới, đừng join nhiều bảng trong Tableau. Kéo duy nhất bảng này vào canvas:
 
-| Dashboard section | Table nên dùng |
-| --- | --- |
-| KPI cards và monthly trend | `agg_monthly_sales` |
-| Top categories | `agg_product_category_performance` |
-| Top sellers | `agg_seller_performance` |
-| Delivery by geography | `agg_delivery_performance` |
+```text
+mart_tableau_sales_dashboard
+```
 
-Cách làm đơn giản:
+Lý do:
 
-1. Kéo `agg_monthly_sales` vào canvas.
-2. Tạo các worksheet từ bảng này.
-3. Khi cần chart category/seller/delivery, tạo thêm data source hoặc thay data source sang bảng tương ứng.
+- KPI cards và charts có thể dùng chung filter.
+- Không cần tự join fact/dim.
+- Có sẵn month, category, seller, customer geography.
+- Có `allocated_payment_value` để payment không bị nhân bản theo order item.
 
-Không bắt buộc phải join các bảng aggregate với nhau.
+Các bảng aggregate như `agg_monthly_sales`, `agg_product_category_performance`, `agg_seller_performance`, `agg_delivery_performance` vẫn hữu ích để kiểm tra số liệu hoặc làm dashboard phụ. Nhưng dashboard chính nên dùng `mart_tableau_sales_dashboard`.
+
+## 5.1. Calculated Fields Bắt Buộc
+
+Sau khi connect `mart_tableau_sales_dashboard`, tạo các calculated fields sau trong Tableau.
+
+### Total GMV
+
+```text
+SUM([gmv])
+```
+
+### Payment Total
+
+```text
+SUM([allocated_payment_value])
+```
+
+Không dùng payment order-level trực tiếp ở item-grain. Field `allocated_payment_value` đã được dbt xử lý để không double-count.
+
+### Order Count
+
+```text
+COUNTD([order_id])
+```
+
+### Average Order Value
+
+```text
+SUM([gmv]) / COUNTD([order_id])
+```
+
+### On-Time Delivery Rate
+
+```text
+COUNTD(
+    IF [is_delivered_on_time_int] = 1 THEN [order_id] END
+)
+/
+COUNTD(
+    IF NOT ISNULL([is_delivered_on_time_int]) THEN [order_id] END
+)
+```
+
+Format là Percentage.
+
+### Average Review Score
+
+```text
+AVG([avg_review_score])
+```
 
 ## 6. Làm Sheet KPI Cards
 
@@ -139,21 +195,21 @@ KPI - Avg Review
 
 ### 6.1. KPI - Total GMV
 
-Data source: `agg_monthly_sales`
+Data source: `mart_tableau_sales_dashboard`
 
 Các bước:
 
 1. Tạo worksheet mới.
 2. Đổi tên sheet thành `KPI - Total GMV`.
-3. Kéo `gmv` vào `Text` trong Marks.
-4. Click field `SUM(gmv)` -> format currency.
+3. Kéo calculated field `Total GMV` vào `Text` trong Marks.
+4. Format currency.
 5. Trong Marks, chọn `Text`.
 6. Click `Text` -> `Edit Label`.
 7. Sửa label thành:
 
 ```text
 Total GMV
-<SUM(gmv)>
+<Total GMV>
 ```
 
 Format:
@@ -167,12 +223,12 @@ Format:
 
 Tương tự Total GMV:
 
-- Dùng `SUM(payment_value_total)`.
+- Dùng calculated field `Payment Total`.
 - Label:
 
 ```text
 Payment Total
-<SUM(payment_value_total)>
+<Payment Total>
 ```
 
 ### 6.3. KPI - AOV
@@ -180,14 +236,14 @@ Payment Total
 Dùng:
 
 ```text
-AVG(average_order_value)
+Average Order Value
 ```
 
 Label:
 
 ```text
 Average Order Value
-<AVG(average_order_value)>
+<Average Order Value>
 ```
 
 ### 6.4. KPI - On-Time Rate
@@ -195,7 +251,7 @@ Average Order Value
 Dùng:
 
 ```text
-AVG(on_time_delivery_rate)
+On-Time Delivery Rate
 ```
 
 Format field thành percentage.
@@ -204,7 +260,7 @@ Label:
 
 ```text
 On-Time Delivery
-<AVG(on_time_delivery_rate)>
+<On-Time Delivery Rate>
 ```
 
 ### 6.5. KPI - Avg Review
@@ -212,14 +268,14 @@ On-Time Delivery
 Dùng:
 
 ```text
-AVG(avg_review_score)
+Average Review Score
 ```
 
 Label:
 
 ```text
 Avg Review Score
-<AVG(avg_review_score)>
+<Average Review Score>
 ```
 
 ## 7. Nếu Muốn Một Worksheet Chứa Nhiều KPI
@@ -233,11 +289,11 @@ Nếu bắt buộc làm một worksheet duy nhất chứa nhiều thông số:
 5. Chỉ chọn:
 
 ```text
-gmv
-payment_value_total
-average_order_value
-on_time_delivery_rate
-avg_review_score
+Total GMV
+Payment Total
+Average Order Value
+On-Time Delivery Rate
+Average Review Score
 ```
 
 6. Format từng measure trong `Measure Values`.
@@ -252,22 +308,22 @@ Vì vậy, để dashboard đẹp như Tableau Public, nên dùng nhiều KPI wo
 
 ## 8. Làm Sheet Monthly GMV Trend
 
-Data source: `agg_monthly_sales`
+Data source: `mart_tableau_sales_dashboard`
 
 Các bước:
 
 1. Tạo worksheet `Monthly GMV Trend`.
 2. Kéo `month_start_date` vào `Columns`.
-3. Kéo `gmv` vào `Rows`.
+3. Kéo calculated field `Total GMV` vào `Rows`.
 4. Marks chọn `Line`.
 5. Click `month_start_date` trên Columns:
    - Chọn dạng `Month` hoặc `Exact Date`.
    - Nên dùng continuous date để line chart mượt.
 6. Kéo thêm vào Tooltip:
-   - `payment_value_total`
-   - `average_order_value`
-   - `on_time_delivery_rate`
-   - `avg_review_score`
+   - `allocated_payment_value`
+   - calculated field `Average Order Value`
+   - calculated field `On-Time Delivery Rate`
+   - calculated field `Average Review Score`
 
 Format:
 
@@ -280,29 +336,29 @@ Tooltip gợi ý:
 
 ```text
 Month: <month_start_date>
-GMV: <SUM(gmv)>
-Payment: <SUM(payment_value_total)>
-AOV: <AVG(average_order_value)>
-On-Time Rate: <AVG(on_time_delivery_rate)>
-Avg Review: <AVG(avg_review_score)>
+GMV: <Total GMV>
+Payment: <Payment Total>
+AOV: <Average Order Value>
+On-Time Rate: <On-Time Delivery Rate>
+Avg Review: <Average Review Score>
 ```
 
 ## 9. Làm Sheet Top Product Categories
 
-Data source: `agg_product_category_performance`
+Data source: `mart_tableau_sales_dashboard`
 
 Các bước:
 
 1. Tạo worksheet `Top Product Categories`.
 2. Kéo `product_category_name_english` vào `Rows`.
-3. Kéo `total_amount` vào `Columns`.
+3. Kéo calculated field `Total GMV` vào `Columns`.
 4. Marks chọn `Bar`.
 5. Sort descending.
 6. Filter Top 10:
    - Click `product_category_name_english` -> `Filter`.
    - Tab `Top`.
    - Chọn `By field`.
-   - Top `10` by `SUM(total_amount)`.
+   - Top `10` by calculated field `Total GMV`.
 
 Format:
 
@@ -313,13 +369,13 @@ Format:
 
 ## 10. Làm Sheet Top Sellers
 
-Data source: `agg_seller_performance`
+Data source: `mart_tableau_sales_dashboard`
 
 Các bước:
 
 1. Tạo worksheet `Top Sellers`.
 2. Kéo `seller_id` vào `Rows`.
-3. Kéo `total_amount` vào `Columns`.
+3. Kéo calculated field `Total GMV` vào `Columns`.
 4. Sort descending.
 5. Filter Top 10 hoặc Top 20 seller.
 
@@ -327,7 +383,7 @@ Tooltip:
 
 ```text
 Seller: <seller_id>
-Total Amount: <SUM(total_amount)>
+Total GMV: <Total GMV>
 Item Price: <SUM(item_price_total)>
 Freight: <SUM(freight_value_total)>
 ```
@@ -340,7 +396,7 @@ Design:
 
 ## 11. Làm Sheet Delivery By State
 
-Data source: `agg_delivery_performance`
+Data source: `mart_tableau_sales_dashboard`
 
 Option dễ làm nhất: bar chart.
 
@@ -348,26 +404,25 @@ Các bước:
 
 1. Tạo worksheet `Delivery by State`.
 2. Kéo `customer_state` vào `Rows`.
-3. Kéo `on_time_delivery_rate` vào `Columns`.
-4. Aggregation: `AVG`.
-5. Format thành percentage.
-6. Kéo `total_orders` vào `Label` hoặc Tooltip.
+3. Kéo calculated field `On-Time Delivery Rate` vào `Columns`.
+4. Format thành percentage.
+5. Kéo calculated field `Order Count` vào `Label` hoặc Tooltip.
 7. Kéo `avg_review_score` vào `Color`.
 
 Design:
 
 - Sort descending theo on-time rate.
 - Dùng màu càng đậm càng tốt.
-- Nếu màu khó hiểu, đổi Color thành `on_time_delivery_rate`.
+- Nếu màu khó hiểu, đổi Color thành calculated field `On-Time Delivery Rate`.
 
 Tooltip:
 
 ```text
 State: <customer_state>
-Total Orders: <SUM(total_orders)>
-GMV: <SUM(gmv)>
-On-Time Rate: <AVG(on_time_delivery_rate)>
-Avg Review: <AVG(avg_review_score)>
+Total Orders: <Order Count>
+GMV: <Total GMV>
+On-Time Rate: <On-Time Delivery Rate>
+Avg Review: <Average Review Score>
 ```
 
 ## 12. Tạo Dashboard Page
@@ -524,7 +579,7 @@ Ví dụ tooltip cho category:
 
 ```text
 Category: <product_category_name_english>
-Total Amount: <SUM(total_amount)>
+Total GMV: <Total GMV>
 Item Price: <SUM(item_price_total)>
 Freight: <SUM(freight_value_total)>
 ```
@@ -611,4 +666,3 @@ Nguồn tham khảo:
 - Tableau Help - Best Practices for Effective Dashboards: https://help.tableau.com/current/pro/desktop/en-us/dashboards_best_practices.htm
 - Tableau Help - Create a Dashboard: https://help.tableau.com/current/pro/desktop/en-us/dashboards_create.htm
 - Tableau Help - Actions and Dashboards: https://help.tableau.com/current/pro/desktop/en-us/actions_dashboards.htm
-
